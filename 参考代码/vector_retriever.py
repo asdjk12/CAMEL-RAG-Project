@@ -18,13 +18,20 @@ class VecRetriever:
             qdrant_db: QdrantDB数据库实例（来自qdrant.py）
         """
         # TODO: 保存qdrant_db实例
-        self.qdrant_db = None
+        self.qdrant_db = qdrant_db
         
         # TODO: 创建VectorRetriever实例
         # 提示：需要embedding_model和storage参数
         # embedding_model来自qdrant_db.embedding_instance
         # storage来自qdrant_db.storage_instance
-        self.vector_retriever = None
+        self.vector_retriever = VectorRetriever(
+            embedding_model=self.qdrant_db.embedding_instance,
+            storage=self.qdrant_db.storage_instance
+        )
+
+    def close(self):
+        """关闭底层Qdrant客户端，避免解释器退出时的清理报错。"""
+        self.qdrant_db.storage_instance.close_client()
     
     def search(self, question: str, top_k: int = 5):
         """
@@ -43,35 +50,50 @@ class VecRetriever:
         """
         # TODO: 使用self.vector_retriever.query()进行检索
         # 提示：需要query、top_k参数
+        research_result = self.vector_retriever.query(
+            query= question,
+            top_k=top_k,
+        )
         
         # TODO: 将检索结果格式化为指定格式
         # 原始结果格式：[{'content path': '文件名', 'text': '内容'}, ...]
         # 目标格式：[{'file_name': '文件名', 'content': '内容'}, ...]
-        
         result = []
+        for i in research_result:
+            target_format = {
+                'file_name': i.get('content path') or i.get('source_file', ''),
+                'content': i.get('text', '')
+            }
+            result.append(target_format)
+
         return result
 
-# 使用示例：
-"""
-# 1. 先创建并初始化数据库（使用qdrant.py中的QdrantDB）
-db = QdrantDB()
+def main():
+    # 使用示例：
+    # 1. 先创建并初始化数据库（使用qdrant.py中的QdrantDB）
+    db = QdrantDB()
+    retriever = VecRetriever(db)
 
-# 2. 保存一些测试数据
-db.save_text("人工智能是计算机科学的一个分支", "AI教程.txt")
-db.save_text("机器学习是实现人工智能的方法之一", "ML指南.txt")
+    try:
+        # 2. 保存一些测试数据
+        #db.save_text("人工智能是计算机科学的一个分支", "AI教程.txt")
+        #db.save_text("机器学习是实现人工智能的方法之一", "ML指南.txt")
 
-# 3. 创建检索器
-retriever = VecRetriever(db)
+        # 3. 检索相关文本
+        results = retriever.search("什么是人工智能？", top_k=3)
 
-# 4. 检索相关文本
-results = retriever.search("什么是人工智能？", top_k=3)
+        # 4. 查看结果
+        for item in results:
+            print(f"文件：{item['file_name']}")
+            print(f"内容：{item['content']}")
+            print("-" * 50)
+    finally:
+        retriever.close()
 
-# 5. 查看结果
-for item in results:
-    print(f"文件：{item['file_name']}")
-    print(f"内容：{item['content']}")
-    print("-" * 50)
-"""
+
+if __name__ == "__main__":
+    main()
+
 
 # 实习生任务：
 # 1. 确保已完成qdrant.py中的TODO部分
