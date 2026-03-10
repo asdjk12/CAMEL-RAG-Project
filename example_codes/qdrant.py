@@ -37,7 +37,7 @@ class QdrantDB:
             collection_name="rag_docs",
         )
         
-    def save_text(self, text: str, source_file: str = "unknown", idx:int= 0):
+    def save_text(self, text: str, page_idx:int ,source_file: str = "unknown", idx:int= 0):
         """
         保存单个文本到数据库
         
@@ -56,9 +56,13 @@ class QdrantDB:
         
         # TODO: 创建payload字典，包含text和source_file信息
         payload = {
-            "text": text,
-            "source_file": source_file,
-            "idx": idx
+            # 来自json文件内容
+            "text": text,           
+            "content path": source_file,
+            "extra_info":{
+                "page_idx": page_idx,       # json文件中的页码 
+                 "idx": idx,                 # json文件中的数组index
+            }
         }
 
         # TODO: 创建VectorRecord对象
@@ -81,9 +85,13 @@ class QdrantDB:
             content = item.get("text","").strip()
             if item.get("type") == "text" and content:
                 self.save_text(
-                    text=text,
+                    # json content
+                    text=content,
                     source_file=json_path,
-                    idx=idx,
+                    page_idx=item.get("page_idx"),
+
+                    # chunk idx
+                    idx=idx,   
                 )
         return 0
 
