@@ -21,7 +21,6 @@ class VecRetriever:
         self.qdrant_db = qdrant_db
         
         # TODO: 创建VectorRetriever实例
-        # 提示：需要embedding_model和storage参数
         # embedding_model来自qdrant_db.embedding_instance
         # storage来自qdrant_db.storage_instance
         self.vector_retriever = VectorRetriever(
@@ -49,7 +48,6 @@ class VecRetriever:
             列表，每个元素包含{'file_name': '文件名', 'content': '内容'}
         """
         # TODO: 使用self.vector_retriever.query()进行检索
-        # 提示：需要query、top_k参数
         research_result = self.vector_retriever.query(
             query= question,
             top_k=top_k,
@@ -60,10 +58,17 @@ class VecRetriever:
         # 目标格式：[{'file_name': '文件名', 'content': '内容'}, ...]
         result = []
         for i in research_result:
+            extra_info = i.get("extra_info", {}) or {}
             target_format = {
                 'file_name': i.get('content path'),
-                'page_idx':i.get('extra_info', '').get("page_idx",""),
+                'page_idx': extra_info.get("page_idx", ""),
                 'content': i.get('text', ''),
+                'source_type': extra_info.get("source_type", "text"),
+                'modality': extra_info.get("modality", "text"),
+                'start_second': extra_info.get("start_second"),
+                'end_second': extra_info.get("end_second"),
+                'chunk_id': extra_info.get("chunk_id"),
+                'extra_info': extra_info,
             }
             result.append(target_format)
 
@@ -95,8 +100,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-# 实习生任务：
-# 1. 确保已完成qdrant.py中的TODO部分
-# 2. 完成本文件中的TODO部分，实现向量检索功能
-# 3. 测试完整的存储->检索流程

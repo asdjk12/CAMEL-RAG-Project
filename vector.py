@@ -71,11 +71,11 @@ class MultiTurnRAGSession:
         3. 如果最新问题已经完整，保留原意即可。
         4. 只输出改写后的问题，不要解释。
 
-[历史对话]
-{self.memory.build_context_summary()}
+    [历史对话]
+    {self.memory.build_context_summary()}
 
-[最新用户问题]
-{question}
+    [最新用户问题]
+    {question}
         """
 
         try:
@@ -197,12 +197,14 @@ def interactive_main(model, db, json_path, rebuild_index=False):
 
 
 if __name__ == "__main__":
+    # 环境变量
     load_dotenv()
 
     json_path = os.getenv("SMALL_OCR_CONTENT_LIST")
     if not json_path:
         raise ValueError("SMALL_OCR_CONTENT_LIST is not set")
 
+    # 初始化
     model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
         model_type="ZhipuAI/GLM-5",
@@ -212,9 +214,11 @@ if __name__ == "__main__":
 
     db = qdrant.QdrantDB()
 
+    # terminal imput控制
     cli_inputs = sys.argv[1:]
     if cli_inputs:
         main(
+            # terminal 问题
             model=model,
             db=db,
             json_path=json_path,
@@ -223,6 +227,7 @@ if __name__ == "__main__":
         )
     else:
         interactive_main(
+            # 交互页面
             model=model,
             db=db,
             json_path=json_path,

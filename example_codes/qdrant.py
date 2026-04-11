@@ -20,17 +20,14 @@ class QdrantDB:
             model_name: huggingface模型名称
         """
         # TODO: 设置rootpath（数据存储根目录）
-        # 提示：使用os.path.dirname(__file__)获取当前文件路径
         self.root_path = os.path.dirname(os.path.abspath(__file__))
         
         # TODO: 初始化SentenceTransformerEncoder
-        # 提示：使用model_name参数
         self.embedding_instance = SentenceTransformerEncoder(
             model_name=model_name,       
         )
         
         # TODO: 初始化QdrantStorage
-        # 提示：需要vector_dim和path参数
         self.storage_instance = QdrantStorage(
             vector_dim= self.embedding_instance.get_output_dim(),       # 模型输出维度等同于向量库输入维度
             path= os.path.join(self.root_path, "qdrant_data"),  # 新建qdrant_data在根目录下以存放数据
@@ -51,7 +48,6 @@ class QdrantDB:
             source_file: 文本来源文件名
         """
         # TODO: 使用embedding_instance将文本转换为向量
-        # 提示：使用embed_list方法
         text2vector = self.embedding_instance.embed_list(objs=[text])[0]       # 文本转向量
         
         # TODO: 创建payload字典，包含text和source_file信息
@@ -73,9 +69,6 @@ class QdrantDB:
         
         # TODO: 使用storage_instance.add()保存记录
         self.storage_instance.add([vector_record])
-
-# 实习生任务：
-# 完成上述TODO部分，实现一个能够将文本保存到Qdrant向量数据库的功能
 
     def text2vector(self, text, json_path:str = "unknown"):
         """
@@ -108,4 +101,7 @@ if __name__ == "__main__":
         print("文本保存完成！")
     finally:
         db.storage_instance.close_client()
+
+
+
 
